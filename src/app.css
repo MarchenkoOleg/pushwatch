@@ -1,0 +1,285 @@
+/* Theme system: palettes live on [data-theme]; components only use vars.
+   The effective theme is set by +layout.svelte (auto follows the OS). */
+
+:root {
+  font-family: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1e222b;
+  --border: #2a2f3a;
+  --text: #e6e9ef;
+  --dim: #8b93a1;
+  --accent: #4f8cff;
+  --accent-soft: rgba(79, 140, 255, 0.05);
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --gray: #71717a;
+
+  --panel-hover: #1a1e26;
+  --btn-hover-bg: #262b36;
+  --btn-hover-border: #3a4150;
+  --details-bg: #14171d;
+  --toast-bg: #2a2f3a;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --scroll-thumb: #2c323d;
+
+  --error-fg: #f87171;
+  --error-bg: rgba(239, 68, 68, 0.1);
+  --error-border: rgba(239, 68, 68, 0.3);
+  --banner-yellow-fg: #facc15;
+  --banner-yellow-bg: rgba(234, 179, 8, 0.1);
+  --behind-fg: #93c5fd;
+
+  --chip-red-bg: rgba(239, 68, 68, 0.14);
+  --chip-red-fg: #f87171;
+  --chip-red-border: rgba(239, 68, 68, 0.3);
+  --chip-yellow-bg: rgba(234, 179, 8, 0.12);
+  --chip-yellow-fg: #facc15;
+  --chip-yellow-border: rgba(234, 179, 8, 0.28);
+  --chip-purple-bg: rgba(168, 85, 247, 0.12);
+  --chip-purple-fg: #c084fc;
+  --chip-purple-border: rgba(168, 85, 247, 0.28);
+  --chip-gray-bg: rgba(113, 113, 122, 0.15);
+  --chip-gray-fg: #a1a1aa;
+  --chip-gray-border: rgba(113, 113, 122, 0.3);
+  --chip-green-bg: rgba(34, 197, 94, 0.12);
+  --chip-green-fg: #4ade80;
+  --chip-green-border: rgba(34, 197, 94, 0.28);
+  --kind-push: #4ade80;
+  --kind-fetch: #93c5fd;
+  --gone-fg: #c084fc;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --panel-2: #eceef2;
+  --border: #d7dbe2;
+  --text: #1b1f27;
+  --dim: #667085;
+  --accent: #2f6fed;
+  --accent-soft: rgba(47, 111, 237, 0.06);
+  --green: #16a34a;
+  --yellow: #d97706;
+  --red: #dc2626;
+  --gray: #6b7280;
+
+  --panel-hover: #f2f4f8;
+  --btn-hover-bg: #e9edf3;
+  --btn-hover-border: #c0c7d2;
+  --details-bg: #f7f8fa;
+  --toast-bg: #ffffff;
+  --shadow: rgba(23, 26, 32, 0.18);
+  --scroll-thumb: #c4cad4;
+
+  --error-fg: #b91c1c;
+  --error-bg: rgba(220, 38, 38, 0.08);
+  --error-border: rgba(220, 38, 38, 0.25);
+  --banner-yellow-fg: #92610a;
+  --banner-yellow-bg: rgba(217, 119, 6, 0.09);
+  --behind-fg: #2f6fed;
+
+  --chip-red-bg: rgba(220, 38, 38, 0.08);
+  --chip-red-fg: #b91c1c;
+  --chip-red-border: rgba(220, 38, 38, 0.25);
+  --chip-yellow-bg: rgba(217, 119, 6, 0.1);
+  --chip-yellow-fg: #92610a;
+  --chip-yellow-border: rgba(217, 119, 6, 0.3);
+  --chip-purple-bg: rgba(147, 51, 234, 0.08);
+  --chip-purple-fg: #7e22ce;
+  --chip-purple-border: rgba(147, 51, 234, 0.25);
+  --chip-gray-bg: rgba(107, 114, 128, 0.1);
+  --chip-gray-fg: #4b5563;
+  --chip-gray-border: rgba(107, 114, 128, 0.3);
+  --chip-green-bg: rgba(22, 163, 74, 0.08);
+  --chip-green-fg: #15803d;
+  --chip-green-border: rgba(22, 163, 74, 0.3);
+  --kind-push: #15803d;
+  --kind-fetch: #2563eb;
+  --gone-fg: #7e22ce;
+}
+
+/* Fallback before JS sets data-theme (matches dark default). */
+:root {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1e222b;
+  --border: #2a2f3a;
+  --text: #e6e9ef;
+  --dim: #8b93a1;
+  --accent: #4f8cff;
+  --accent-soft: rgba(79, 140, 255, 0.05);
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --gray: #71717a;
+  --panel-hover: #1a1e26;
+  --btn-hover-bg: #262b36;
+  --btn-hover-border: #3a4150;
+  --details-bg: #14171d;
+  --toast-bg: #2a2f3a;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --scroll-thumb: #2c323d;
+  --error-fg: #f87171;
+  --error-bg: rgba(239, 68, 68, 0.1);
+  --error-border: rgba(239, 68, 68, 0.3);
+  --banner-yellow-fg: #facc15;
+  --banner-yellow-bg: rgba(234, 179, 8, 0.1);
+  --behind-fg: #93c5fd;
+  --chip-red-bg: rgba(239, 68, 68, 0.14);
+  --chip-red-fg: #f87171;
+  --chip-red-border: rgba(239, 68, 68, 0.3);
+  --chip-yellow-bg: rgba(234, 179, 8, 0.12);
+  --chip-yellow-fg: #facc15;
+  --chip-yellow-border: rgba(234, 179, 8, 0.28);
+  --chip-purple-bg: rgba(168, 85, 247, 0.12);
+  --chip-purple-fg: #c084fc;
+  --chip-purple-border: rgba(168, 85, 247, 0.28);
+  --chip-gray-bg: rgba(113, 113, 122, 0.15);
+  --chip-gray-fg: #a1a1aa;
+  --chip-gray-border: rgba(113, 113, 122, 0.3);
+  --chip-green-bg: rgba(34, 197, 94, 0.12);
+  --chip-green-fg: #4ade80;
+  --chip-green-border: rgba(34, 197, 94, 0.28);
+  --kind-push: #4ade80;
+  --kind-fetch: #93c5fd;
+  --gone-fg: #c084fc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+#app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+button:hover:not(:disabled) {
+  background: var(--btn-hover-bg);
+  border-color: var(--btn-hover-border);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.1);
+}
+
+button.ghost {
+  background: transparent;
+}
+
+button.small {
+  padding: 3px 9px;
+  font-size: 12px;
+}
+
+input[type="text"],
+input[type="number"] {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 10px;
+  outline: none;
+  user-select: text;
+}
+
+input:focus {
+  border-color: var(--accent);
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot.green { background: var(--green); }
+.dot.yellow { background: var(--yellow); }
+.dot.red { background: var(--red); }
+.dot.gray { background: var(--gray); }
+.dot.pulse { animation: pulse 1.2s ease-in-out infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.chip.red { background: var(--chip-red-bg); color: var(--chip-red-fg); border-color: var(--chip-red-border); }
+.chip.yellow { background: var(--chip-yellow-bg); color: var(--chip-yellow-fg); border-color: var(--chip-yellow-border); }
+.chip.purple { background: var(--chip-purple-bg); color: var(--chip-purple-fg); border-color: var(--chip-purple-border); }
+.chip.gray { background: var(--chip-gray-bg); color: var(--chip-gray-fg); border-color: var(--chip-gray-border); }
+.chip.green { background: var(--chip-green-bg); color: var(--chip-green-fg); border-color: var(--chip-green-border); }
