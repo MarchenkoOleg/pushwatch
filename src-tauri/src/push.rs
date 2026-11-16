@@ -90,6 +90,11 @@ pub fn collect_pushable(snapshot: &MachineSnapshot) -> Vec<PushItem> {
 /// Run one push synchronously in `repo_path`, streaming lines to the UI.
 /// Returns (ok, exit-code-like).
 fn run_push(app: &AppHandle, repo_path: &Path, args: &[String], path_key: &str) -> (bool, i32) {
+    let lang = {
+        let state = app.state::<AppState>();
+        let inner = state.0.lock().unwrap();
+        inner.config.lang
+    };
     let mut cmd = Command::new("git");
     cmd.current_dir(repo_path)
         .env("LC_ALL", "C")
@@ -101,7 +106,7 @@ fn run_push(app: &AppHandle, repo_path: &Path, args: &[String], path_key: &str) 
     cmd.args(args);
 
     let mut outcome: Result<std::process::ExitStatus, String> =
-        Err("не удалось запустить git".into());
+        Err(crate::lang::tr(lang).err_spawn_git.into());
     if let Ok(mut child) = cmd.spawn() {
         // stdout/stderr are piped; each stream is drained by its own
         // thread so git never blocks on a full pipe buffer.
@@ -162,14 +167,19 @@ pub fn push_branch(
     set_upstream: bool,
 ) -> Result<(), String> {
     let repo_path = PathBuf::from(&path);
+    let s = crate::lang::tr({
+        let state = app.state::<AppState>();
+        let inner = state.0.lock().unwrap();
+        inner.config.lang
+    });
     if !repo_path.is_dir() {
-        return Err("путь не существует".into());
+        return Err(s.err_path_missing.into());
     }
     {
         let state = app.state::<AppState>();
         let mut inner = state.0.lock().unwrap();
         if inner.pushing.contains(&path) || inner.push_all_running {
-            return Err("push для этого репозитория уже выполняется".into());
+            return Err(s.err_push_busy.into());
         }
         inner.pushing.insert(path.clone());
     }
@@ -205,11 +215,13 @@ pub fn push_branch(
 /// sequentially (one remote operation at a time). Progress arrives as
 /// `push://queue` per item, summary as `push://all_done`, then a rescan.
 pub fn push_all(app: &AppHandle) -> Result<(), String> {
+    let s;
     {
         let state = app.state::<AppState>();
         let mut inner = state.0.lock().unwrap();
+        s = crate::lang::tr(inner.config.lang);
         if inner.push_all_running {
-            return Err("push all уже выполняется".into());
+            return Err(s.err_push_all_busy.into());
         }
         let queue = inner
             .snapshot
@@ -217,7 +229,7 @@ pub fn push_all(app: &AppHandle) -> Result<(), String> {
             .map(collect_pushable)
             .unwrap_or_default();
         if queue.is_empty() {
-            return Err("нечего пушить — все ветки отправлены".into());
+            return Err(s.err_nothing_to_push.into());
         }
         inner.push_all_running = true;
     }
@@ -310,7 +322,15 @@ pub fn push_all(app: &AppHandle) -> Result<(), String> {
         crate::history::append(
             &history_path,
             "push",
-            &format!("batch push: отправлено {pushed} из {total}, ошибок: {failed}"),
+            &crate::lang::hist_push_batch(
+                {
+                    let state = app.state::<AppState>();
+                    state.0.lock().unwrap().config.lang
+                },
+                pushed,
+                total,
+                failed,
+            ),
             Some(failed == 0),
         );
 

@@ -197,6 +197,16 @@ pub enum Theme {
     Dark,
 }
 
+/// UI language preference. `Auto` follows the OS locale.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Lang {
+    #[default]
+    Auto,
+    Ru,
+    En,
+}
+
 /// App settings, persisted as JSON in the OS config dir.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", default)]
@@ -219,6 +229,8 @@ pub struct Config {
     pub start_hidden: bool,
     /// UI theme: follow the OS (auto) or force light/dark.
     pub theme: Theme,
+    /// UI language: follow the OS locale (auto) or force ru/en.
+    pub lang: Lang,
     /// Shared folder for cross-machine snapshots (Syncthing/iCloud/private
     /// git repo). `None` — aggregation disabled, local-only mode.
     pub sync_dir: Option<String>,
@@ -257,6 +269,7 @@ impl Default for Config {
             max_depth: 6,
             start_hidden: false,
             theme: Theme::Auto,
+            lang: Lang::Auto,
             sync_dir: None,
             auto_fetch: false,
             watch_fs: true,

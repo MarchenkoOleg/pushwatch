@@ -1,15 +1,16 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte";
   import { store } from "$lib/store.svelte";
 </script>
 
 {#if store.boot && !store.boot.git_available}
   <div class="banner red">
-    git не найден в PATH. Установите git и перезапустите pushwatch.
+    {t("banner_no_git")}
   </div>
 {:else if store.boot && store.boot.config.roots.length === 0 && store.repos.length === 0}
   <div class="banner yellow">
-    <span>Укажите корневые папки с репозиториями</span>
-    <button class="small" onclick={() => (store.view = "settings")}>Настройки</button>
+    <span>{t("banner_no_roots")}</span>
+    <button class="small" onclick={() => (store.view = "settings")}>{t("btn_settings")}</button>
   </div>
 {/if}
 

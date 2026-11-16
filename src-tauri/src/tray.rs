@@ -9,28 +9,40 @@ use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{App, AppHandle, Manager};
 
-use crate::model::{MachineSnapshot, RepoState};
+use crate::lang;
+use crate::model::{Lang, MachineSnapshot, RepoState};
 use crate::scan;
 
 const TRAY_ID: &str = "pushwatch-tray";
+static OPEN_ITEM: OnceLock<MenuItem<tauri::Wry>> = OnceLock::new();
+static SCAN_ITEM: OnceLock<MenuItem<tauri::Wry>> = OnceLock::new();
 static AUTOSTART_ITEM: OnceLock<CheckMenuItem<tauri::Wry>> = OnceLock::new();
+static QUIT_ITEM: OnceLock<MenuItem<tauri::Wry>> = OnceLock::new();
+
+fn config_lang(app: &AppHandle) -> Lang {
+    app.state::<crate::state::AppState>().0.lock().unwrap().config.lang
+}
 
 pub fn build(app: &App) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "pw-open", "Открыть pushwatch", true, None::<&str>)?;
-    let scan_item = MenuItem::with_id(app, "pw-scan", "Сканировать сейчас", true, None::<&str>)?;
+    let s = lang::tr(config_lang(app.handle()));
+    let open = MenuItem::with_id(app, "pw-open", s.tray_open, true, None::<&str>)?;
+    let scan_item = MenuItem::with_id(app, "pw-scan", s.tray_scan, true, None::<&str>)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let autostart_enabled = autostart_enabled(app.handle());
     let autostart = CheckMenuItem::with_id(
         app,
         "pw-autostart",
-        "Запускать при входе",
+        s.tray_autostart,
         true,
         autostart_enabled,
         None::<&str>,
     )?;
     let _ = AUTOSTART_ITEM.set(autostart.clone());
+    let _ = OPEN_ITEM.set(open.clone());
+    let _ = SCAN_ITEM.set(scan_item.clone());
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "pw-quit", "Выход", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "pw-quit", s.tray_quit, true, None::<&str>)?;
+    let _ = QUIT_ITEM.set(quit.clone());
 
     let menu = Menu::with_items(app, &[&open, &scan_item, &sep1, &autostart, &sep2, &quit])?;
 
@@ -90,11 +102,20 @@ pub fn show_main_window(app: &AppHandle) {
     }
 }
 
-/// Refresh the tray icon/tooltip from the latest snapshot.
+/// Refresh the tray icon/tooltip from the latest snapshot. Also re-applies
+/// the localized menu texts so a language change in settings shows up
+/// without a restart (update runs after every scan, and saving settings
+/// triggers a scan).
 pub fn update(app: &AppHandle, snapshot: Option<&MachineSnapshot>, git_missing: bool) {
     let Some(tray) = app.tray_by_id(TRAY_ID) else {
         return;
     };
+
+    let s = lang::tr(config_lang(app));
+    let _ = OPEN_ITEM.get().map(|i| i.set_text(s.tray_open));
+    let _ = SCAN_ITEM.get().map(|i| i.set_text(s.tray_scan));
+    let _ = AUTOSTART_ITEM.get().map(|i| i.set_text(s.tray_autostart));
+    let _ = QUIT_ITEM.get().map(|i| i.set_text(s.tray_quit));
 
     let color = if git_missing {
         (113, 113, 122) // gray
@@ -118,7 +139,7 @@ pub fn update(app: &AppHandle, snapshot: Option<&MachineSnapshot>, git_missing: 
 
     let problems = snapshot.map(|s| s.problem_repo_count()).unwrap_or(0);
     let total = snapshot.map(|s| s.repos.len()).unwrap_or(0);
-    let _ = tray.set_tooltip(Some(format!("pushwatch: {problems} проблемных из {total}")));
+    let _ = tray.set_tooltip(Some(lang::tooltip(config_lang(app), problems, total)));
 
     // Menu-bar text with the problem count; macOS-only tray feature.
     #[cfg(target_os = "macos")]

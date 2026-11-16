@@ -1,6 +1,7 @@
 <script lang="ts">
   import { revealPath, saveConfig } from "$lib/api";
   import { problemChips, repoDotClass } from "$lib/chips";
+  import { t } from "$lib/i18n.svelte";
   import { store } from "$lib/store.svelte";
   import type { RepoStatus } from "$lib/types";
   import RepoDetails from "./RepoDetails.svelte";
@@ -23,7 +24,7 @@
     } catch (e) {
       // Revert the optimistic change so memory matches disk.
       cfg.hidden_repos = cfg.hidden_repos.filter((p) => p !== repo.path);
-      store.notify(`Не удалось скрыть репозиторий: ${String(e)}`);
+      store.notify(t("err_hide", { e: String(e) }));
     }
   }
 </script>
@@ -48,7 +49,7 @@
     </span>
     <button
       class="icon"
-      title="Показать в файловом менеджере"
+      title={t("title_reveal")}
       onclick={(e) => {
         e.stopPropagation();
         void revealPath(repo.path);
@@ -56,7 +57,7 @@
     >↗</button>
     <button
       class="icon"
-      title="Скрыть репозиторий"
+      title={t("title_hide")}
       onclick={(e) => {
         e.stopPropagation();
         void hide();

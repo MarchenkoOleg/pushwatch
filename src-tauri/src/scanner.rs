@@ -67,18 +67,17 @@ pub fn discover(config: &Config) -> (Vec<PathBuf>, Vec<String>) {
         }
     }
 
+    let lang = config.lang;
     for root in &config.roots {
         let root = expand_tilde(root);
         let root_path = PathBuf::from(&root);
         if !root_path.is_dir() {
-            warnings.push(format!("Корневая папка не найдена: {root}"));
+            warnings.push(crate::lang::warn_missing_root(lang, &root));
             continue;
         }
         let (repos, errors) = scan_root(&root_path, config);
         if errors > 0 {
-            warnings.push(format!(
-                "{root}: пропущено недоступных путей: {errors}"
-            ));
+            warnings.push(crate::lang::warn_unreadable(lang, &root, errors));
         }
         for repo in repos {
             add(repo, &mut found, &mut seen);
@@ -89,7 +88,7 @@ pub fn discover(config: &Config) -> (Vec<PathBuf>, Vec<String>) {
         if is_repo(&path) {
             add(path, &mut found, &mut seen);
         } else {
-            warnings.push(format!("Не репозиторий (или недоступен): {extra}"));
+            warnings.push(crate::lang::warn_not_repo(lang, extra));
         }
     }
     // Hidden entries are compared normalized: the user may enter an

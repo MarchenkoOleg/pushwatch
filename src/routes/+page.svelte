@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { t } from "$lib/i18n.svelte";
   import { store } from "$lib/store.svelte";
   import Banner from "$lib/components/Banner.svelte";
   import Header from "$lib/components/Header.svelte";
@@ -27,7 +28,7 @@
     <div class="toast">{store.toast}</div>
   {/if}
 {:else}
-  <div class="loading">Загрузка…</div>
+  <div class="loading">{t("loading")}</div>
 {/if}
 
 <style>

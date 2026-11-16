@@ -1,34 +1,35 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { t } from "$lib/i18n.svelte";
   import { store } from "$lib/store.svelte";
   import { formatScanTime } from "$lib/time";
 
   onMount(() => void store.loadHistory());
 
-  const kindLabel: Record<string, string> = {
-    scan: "скан",
-    push: "push",
-    fetch: "fetch",
+  const kindLabel: Record<string, () => string> = {
+    scan: () => t("kind_scan"),
+    push: () => "push",
+    fetch: () => "fetch",
   };
 </script>
 
 <div class="history">
   <div class="toolbar">
-    <button class="small" onclick={() => void store.loadHistory()}>Обновить</button>
-    <span class="hint">Последние 200 событий</span>
+    <button class="small" onclick={() => void store.loadHistory()}>{t("btn_refresh")}</button>
+    <span class="hint">{t("hist_hint")}</span>
   </div>
   {#if store.history.length === 0}
-    <div class="empty">История пуста — сделайте скан или push.</div>
+    <div class="empty">{t("hist_empty")}</div>
   {:else}
     <table>
       <thead>
-        <tr><th>Время</th><th>Тип</th><th>Событие</th></tr>
+        <tr><th>{t("th_time")}</th><th>{t("th_kind")}</th><th>{t("th_event")}</th></tr>
       </thead>
       <tbody>
         {#each store.history as h, i (i)}
           <tr class:failed={h.ok === false}>
             <td class="time">{formatScanTime(h.ts)}</td>
-            <td><span class="kind kind-{h.kind}">{kindLabel[h.kind] ?? h.kind}</span></td>
+            <td><span class="kind kind-{h.kind}">{kindLabel[h.kind]?.() ?? h.kind}</span></td>
             <td class="msg">{h.message}</td>
           </tr>
         {/each}

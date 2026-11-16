@@ -36,16 +36,18 @@ pub fn status_command(dir: &Path, args: &[&str]) -> Command {
 }
 
 /// Run a read-only git command in `dir`, return trimmed stdout.
+/// Error strings are deliberately English (not localized): they sit in the
+/// UI next to raw git stderr, which is always English under `LC_ALL=C`.
 pub fn run_git(dir: &Path, args: &[&str]) -> Result<String, String> {
     let output = status_command(dir, args)
         .output()
-        .map_err(|e| format!("не удалось запустить git: {e}"))?;
+        .map_err(|e| format!("failed to launch git: {e}"))?;
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
         Err(if stderr.is_empty() {
-            format!("git {} завершился с кодом {}", args.join(" "), output.status)
+            format!("git {} exited with code {}", args.join(" "), output.status)
         } else {
             stderr
         })

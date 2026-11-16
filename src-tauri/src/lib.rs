@@ -4,6 +4,7 @@ mod engine;
 mod fetch;
 mod gitbin;
 mod history;
+mod lang;
 mod model;
 mod parsers;
 mod push;

@@ -118,11 +118,12 @@ fn run_scan(app: AppHandle) {
         crate::history::append(
             &history_path,
             "scan",
-            &format!(
-                "скан: {} репо, {} проблемных, с незапушенными: {} ({elapsed} с)",
+            &crate::lang::hist_scan(
+                config.lang,
                 snapshot.repos.len(),
                 snapshot.problem_repo_count(),
-                snapshot.unpushed_repo_count()
+                snapshot.unpushed_repo_count(),
+                elapsed,
             ),
             None,
         );
@@ -131,7 +132,7 @@ fn run_scan(app: AppHandle) {
         write_sync_snapshot(&app, &snapshot);
     }
     if config.notify_on_problems {
-        notify_if_changed(&app, prev_unpushed, &snapshot);
+        notify_if_changed(&app, prev_unpushed, &snapshot, config.lang);
     }
 }
 
@@ -163,7 +164,7 @@ fn write_sync_snapshot(app: &AppHandle, snapshot: &MachineSnapshot) {
 }
 
 /// System notification on transitions of the unpushed-repo count.
-fn notify_if_changed(app: &AppHandle, prev: usize, snapshot: &MachineSnapshot) {
+fn notify_if_changed(app: &AppHandle, prev: usize, snapshot: &MachineSnapshot, lang: crate::model::Lang) {
     use tauri_plugin_notification::NotificationExt;
     let now = snapshot.unpushed_repo_count();
     let body = if now > prev {
@@ -185,9 +186,9 @@ fn notify_if_changed(app: &AppHandle, prev: usize, snapshot: &MachineSnapshot) {
             .map(|r| r.name.clone())
             .take(3)
             .collect();
-        format!("Незапушенные коммиты: {} репо ({})", now, names.join(", "))
+        crate::lang::notify_unpushed(lang, now, &names.join(", "))
     } else if prev > 0 && now == 0 {
-        "Всё запушено ✓".to_string()
+        crate::lang::tr(lang).notify_all_pushed.to_string()
     } else {
         return;
     };

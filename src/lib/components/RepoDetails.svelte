@@ -1,5 +1,6 @@
 <script lang="ts">
   import { revealPath } from "$lib/api";
+  import { t } from "$lib/i18n.svelte";
   import { store } from "$lib/store.svelte";
   import { problemText } from "$lib/problems";
   import { formatScanTime } from "$lib/time";
@@ -32,8 +33,8 @@
 
   function pushTitle(b: BranchInfo): string {
     const { remote, setUpstream } = pushTarget(b);
-    if (!remote) return "нет настроенного remote";
-    if (!pushable(b)) return "нечего пушить — ветка синхронизирована с upstream";
+    if (!remote) return t("no_remote_title");
+    if (!pushable(b)) return t("synced_title");
     return `git push${setUpstream ? " -u" : ""} ${remote} -- ${b.name}`;
   }
 </script>
@@ -43,17 +44,17 @@
     <button
       class="small"
       disabled={fetchState?.running}
-      title="git fetch --all --prune — обновить данные о remote"
+      title={t("title_fetch_repo")}
       onclick={() => void store.fetch(repo.path)}
     >
       {#if fetchState?.running}<span class="dot gray pulse"></span>{/if}
       Fetch
     </button>
     {#if repo.scanned_at}
-      <span class="scanned">скан: {formatScanTime(repo.scanned_at)}</span>
+      <span class="scanned">{t("time_scan")} {formatScanTime(repo.scanned_at)}</span>
     {/if}
     {#if pushState?.running || fetchState?.running}
-      <span class="proc-label"><span class="dot gray pulse"></span> {pushState?.running ? "push выполняется…" : "fetch выполняется…"}</span>
+      <span class="proc-label"><span class="dot gray pulse"></span> {pushState?.running ? t("running_push") : t("running_fetch")}</span>
     {/if}
   </div>
 
@@ -66,18 +67,18 @@
       <div class="problem">{problemText(p)}</div>
     {/each}
     {#if repo.problems.length === 0 && !repo.error}
-      <div class="problem ok">Проблем нет — всё отправлено</div>
+      <div class="problem ok">{t("no_problems")}</div>
     {/if}
   </div>
 
   {#if repo.dirty_files.length > 0}
     <div class="files">
       <div class="files-title">
-        Изменённые файлы ({repo.dirty_files_total})
+        {t("files_title", { n: repo.dirty_files_total })}
         <button
           class="small ghost"
           onclick={() => (showAllFiles = !showAllFiles)}
-        >{showAllFiles ? "свернуть" : "показать все"}</button>
+        >{showAllFiles ? t("collapse") : t("show_all")}</button>
       </div>
       <ul>
         {#each shownFiles as f (f.label + f.path)}
@@ -85,7 +86,7 @@
             <span class="label">{f.label}</span>
             <button
               class="file"
-              title="Показать в файловом менеджере"
+              title={t("title_reveal")}
               onclick={() => {
                 const sep = repo.path.includes("\\") ? "\\" : "/";
                 void revealPath(`${repo.path}${sep}${f.path.replaceAll("/", sep)}`);
@@ -94,7 +95,7 @@
           </li>
         {/each}
         {#if repo.dirty_files_total > repo.dirty_files.length}
-          <li class="more">… и ещё {repo.dirty_files_total - repo.dirty_files.length}</li>
+          <li class="more">{t("more_files", { n: repo.dirty_files_total - repo.dirty_files.length })}</li>
         {/if}
       </ul>
     </div>
@@ -103,7 +104,7 @@
   {#if repo.branches.length > 0}
     <table class="branches">
       <thead>
-        <tr><th>Ветка</th><th>Upstream</th><th>↑ / ↓</th><th></th></tr>
+        <tr><th>{t("th_branch")}</th><th>{t("th_upstream")}</th><th>↑ / ↓</th><th></th></tr>
       </thead>
       <tbody>
         {#each repo.branches as b (b.name)}
@@ -112,7 +113,7 @@
             <td>
               {#if b.is_head}<span class="head-mark">●</span>{/if}
               {b.name}
-              {#if b.gone}<span class="gone">remote удалён</span>{/if}
+              {#if b.gone}<span class="gone">{t("gone_mark")}</span>{/if}
             </td>
             <td>{b.upstream ?? "—"}</td>
             <td class="num" class:ahead={b.ahead > 0} class:behind={b.behind > 0}>
@@ -134,12 +135,12 @@
   {/if}
 
   {#if repo.stashes > 0}
-    <div class="note">stash: {repo.stashes}</div>
+    <div class="note">{t("stash_note", { n: repo.stashes })}</div>
   {/if}
 
   {#if (pushState?.lines.length ?? 0) + (fetchState?.lines.length ?? 0) > 0}
     <div class="proc-output" class:failed={pushState?.ok === false || fetchState?.ok === false}>
-      <div class="proc-title">Вывод git</div>
+      <div class="proc-title">{t("proc_title")}</div>
       <pre>{(pushState?.lines ?? []).concat(fetchState?.lines ?? []).join("\n") || "…"}</pre>
     </div>
   {/if}

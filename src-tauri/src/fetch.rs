@@ -32,6 +32,11 @@ fn spawn_line_stream<R: Read + Send + 'static>(
 
 /// Run fetch synchronously in `repo_path`, streaming lines to the UI.
 fn run_fetch(app: &AppHandle, repo_path: &Path, path_key: &str) -> (bool, i32) {
+    let lang = {
+        let state = app.state::<AppState>();
+        let inner = state.0.lock().unwrap();
+        inner.config.lang
+    };
     let mut cmd = Command::new("git");
     cmd.current_dir(repo_path)
         .env("LC_ALL", "C")
@@ -43,7 +48,7 @@ fn run_fetch(app: &AppHandle, repo_path: &Path, path_key: &str) -> (bool, i32) {
     cmd.args(fetch_args());
 
     let mut outcome: Result<std::process::ExitStatus, String> =
-        Err("не удалось запустить git".into());
+        Err(crate::lang::tr(lang).err_spawn_git.into());
     if let Ok(mut child) = cmd.spawn() {
         let out_thread = child
             .stdout
@@ -130,7 +135,14 @@ pub fn fetch_all(app: &AppHandle) {
         crate::history::append(
             &handle.state::<AppState>().0.lock().unwrap().history_path,
             "fetch",
-            &format!("fetch всё: {total} репо, ошибок: {failed}"),
+            &crate::lang::hist_fetch_all(
+                {
+                    let state = handle.state::<AppState>();
+                    state.0.lock().unwrap().config.lang
+                },
+                total,
+                failed,
+            ),
             Some(failed == 0),
         );
         // Fresh remote refs → refresh statuses right away.
@@ -141,14 +153,19 @@ pub fn fetch_all(app: &AppHandle) {
 /// Fetch a single repository (async: spawns a thread, emits `fetch://done`).
 pub fn fetch_repo(app: &AppHandle, path: String) -> Result<(), String> {
     let repo_path = PathBuf::from(&path);
+    let s = crate::lang::tr({
+        let state = app.state::<AppState>();
+        let inner = state.0.lock().unwrap();
+        inner.config.lang
+    });
     if !repo_path.is_dir() {
-        return Err("путь не существует".into());
+        return Err(s.err_path_missing.into());
     }
     {
         let state = app.state::<AppState>();
         let mut inner = state.0.lock().unwrap();
         if inner.fetching.contains(&path) {
-            return Err("fetch для этого репозитория уже выполняется".into());
+            return Err(s.err_fetch_busy.into());
         }
         inner.fetching.insert(path.clone());
     }

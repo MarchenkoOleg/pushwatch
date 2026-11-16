@@ -1,4 +1,5 @@
 // Global reactive store (Svelte 5 runes). Single source of truth for the UI.
+import { setLangPref, t } from "$lib/i18n.svelte";
 import {
   fetchAll,
   fetchRepo,
@@ -115,6 +116,7 @@ class AppStore {
     this.repos = this.boot.snapshot?.repos ?? [];
     this.lastScanAt = this.boot.snapshot?.generated_at ?? null;
     this.scanning = this.boot.scanning;
+    setLangPref(this.boot.config.lang);
 
     await Promise.all([
       listenScanStart(() => {
@@ -168,8 +170,8 @@ class AppStore {
         this.pushQueue = null;
         this.notify(
           p.failed === 0
-            ? `Запушено: ${p.pushed} из ${p.total}`
-            : `Пуш завершён: отправлено ${p.pushed}, ошибок ${p.failed} из ${p.total}`,
+            ? t("toast_pushed", { p: p.pushed, t: p.total })
+            : t("toast_push_done", { p: p.pushed, f: p.failed, t: p.total }),
         );
       }),
       listenFetchDone((p) => {
@@ -183,8 +185,8 @@ class AppStore {
         this.fetchingAll = false;
         this.notify(
           p.failed === 0
-            ? `Fetch выполнен: ${p.total} репо`
-            : `Fetch выполнен: ${p.total - p.failed} репо, ошибок ${p.failed}`,
+            ? t("toast_fetch_ok", { n: p.total })
+            : t("toast_fetch_partial", { n: p.total - p.failed, m: p.failed }),
         );
       }),
     ]);
@@ -247,7 +249,7 @@ class AppStore {
       await fetchAll();
     } catch (e) {
       this.fetchingAll = false;
-      this.notify(`Fetch не запущен: ${String(e)}`);
+      this.notify(t("toast_fetch_not_started", { e: String(e) }));
     }
   }
 
@@ -300,6 +302,7 @@ class AppStore {
     if (this.boot) {
       this.boot.config = config;
     }
+    setLangPref(config.lang);
   }
 }
 

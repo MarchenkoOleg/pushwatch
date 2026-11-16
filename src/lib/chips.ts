@@ -1,4 +1,6 @@
 // Problem → chip mapping, shared between the repo list and the machines view.
+// Chip glyphs are language-neutral; tooltips are localized.
+import { t } from "./i18n.svelte";
 import type { Problem, RepoStatus } from "./types";
 
 export interface Chip {
@@ -15,23 +17,23 @@ export function problemChips(repo: RepoStatus): Chip[] {
         out.push({
           text: `↑${p.ahead}`,
           cls: "red",
-          title: `${p.branch}: ${p.ahead} не запушено в ${p.upstream}`,
+          title: t("chip_ahead_title", { branch: p.branch, n: p.ahead, upstream: p.upstream }),
         });
         break;
       case "diverged":
         out.push({
           text: `⇅${p.ahead}/${p.behind}`,
           cls: "red",
-          title: `${p.branch}: расходится с ${p.upstream} — нужен pull --rebase`,
+          title: t("chip_diverged_title", { branch: p.branch, upstream: p.upstream }),
         });
         break;
       case "dirty": {
         const changes = p.staged + p.unstaged + p.conflicts;
         if (changes > 0) {
-          out.push({ text: `~${changes}`, cls: "yellow", title: `изменённых файлов: ${changes}` });
+          out.push({ text: `~${changes}`, cls: "yellow", title: t("chip_dirty_title", { n: changes }) });
         }
         if (p.untracked > 0) {
-          out.push({ text: `?${p.untracked}`, cls: "yellow", title: `новых (untracked): ${p.untracked}` });
+          out.push({ text: `?${p.untracked}`, cls: "yellow", title: t("chip_new_title", { n: p.untracked }) });
         }
         break;
       }
@@ -39,20 +41,20 @@ export function problemChips(repo: RepoStatus): Chip[] {
         out.push({
           text: `∅ ${p.branch}`,
           cls: "gray",
-          title: "ветка ни разу не запушена — upstream не задан",
+          title: t("chip_no_upstream_title"),
         });
         break;
       case "no_remote":
-        out.push({ text: "no remote", cls: "purple", title: "remote не настроен — репозиторий живёт только на этой машине" });
+        out.push({ text: "no remote", cls: "purple", title: t("chip_no_remote_title") });
         break;
       case "upstream_gone":
-        out.push({ text: `✕ ${p.branch}`, cls: "purple", title: `remote-ветка ${p.upstream} удалена или не получена` });
+        out.push({ text: `✕ ${p.branch}`, cls: "purple", title: t("chip_gone_title", { upstream: p.upstream }) });
         break;
       case "orphan":
-        out.push({ text: `orphan ${p.count}`, cls: "purple", title: `коммитов вне всех remote и веток: ${p.count}` });
+        out.push({ text: `orphan ${p.count}`, cls: "purple", title: t("chip_orphan_title", { n: p.count }) });
         break;
       case "detached_head":
-        out.push({ text: "detached", cls: "gray", title: "HEAD вне ветки" });
+        out.push({ text: "detached", cls: "gray", title: t("chip_detached_title") });
         break;
     }
   }

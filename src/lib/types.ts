@@ -56,6 +56,8 @@ export interface MachineSnapshot {
 
 export type ThemePref = "auto" | "light" | "dark";
 
+export type LangPref = "auto" | "ru" | "en";
+
 export interface Config {
   machine_id: string;
   roots: string[];
@@ -66,6 +68,7 @@ export interface Config {
   max_depth: number;
   start_hidden: boolean;
   theme: ThemePref;
+  lang: LangPref;
   sync_dir: string | null;
   auto_fetch: boolean;
   watch_fs: boolean;

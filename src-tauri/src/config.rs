@@ -113,6 +113,7 @@ mod tests {
         cfg.max_depth = 9;
         cfg.start_hidden = true;
         cfg.theme = crate::model::Theme::Light;
+        cfg.lang = crate::model::Lang::En;
         cfg.save(&path).unwrap();
         let loaded = Config::load(&path);
         assert_eq!(loaded.roots, vec!["/tmp/dev".to_string()]);
@@ -123,6 +124,7 @@ mod tests {
         assert_eq!(loaded.max_depth, 9);
         assert!(loaded.start_hidden);
         assert_eq!(loaded.theme, crate::model::Theme::Light);
+        assert_eq!(loaded.lang, crate::model::Lang::En);
         assert_eq!(loaded.machine_id, cfg.machine_id);
         std::fs::remove_dir_all(&dir).ok();
     }

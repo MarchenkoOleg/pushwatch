@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "$lib/i18n.svelte";
   import { store } from "$lib/store.svelte";
   import RepoRow from "./RepoRow.svelte";
 </script>
@@ -6,23 +7,23 @@
 <div class="toolbar">
   <div class="tabs">
     <button class:active={store.filter === "problems"} onclick={() => (store.filter = "problems")}>
-      Проблемные <span class="count">{store.problemCount}</span>
+      {t("filter_problems")} <span class="count">{store.problemCount}</span>
     </button>
     <button class:active={store.filter === "all"} onclick={() => (store.filter = "all")}>
-      Все <span class="count">{store.repos.length}</span>
+      {t("filter_all")} <span class="count">{store.repos.length}</span>
     </button>
   </div>
-  <input type="text" placeholder="Поиск по имени или пути…" bind:value={store.search} />
+  <input type="text" placeholder={t("search_ph")} bind:value={store.search} />
 </div>
 
 <div class="list">
   {#if store.visibleRepos.length === 0}
     {#if store.repos.length === 0}
-      <div class="empty">Репозитории не найдены. Добавьте корневые папки в настройках.</div>
+      <div class="empty">{t("empty_no_repos")}</div>
     {:else if store.filter === "problems" && store.problemCount === 0}
-      <div class="empty ok">✓ Всё запушено</div>
+      <div class="empty ok">{t("empty_all_pushed")}</div>
     {:else}
-      <div class="empty">Ничего не найдено по фильтру.</div>
+      <div class="empty">{t("empty_filter")}</div>
     {/if}
   {:else}
     {#each store.visibleRepos as repo (repo.path)}

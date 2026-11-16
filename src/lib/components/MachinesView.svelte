@@ -1,5 +1,6 @@
 <script lang="ts">
   import { problemChips, repoDotClass } from "$lib/chips";
+  import { t } from "$lib/i18n.svelte";
   import { store } from "$lib/store.svelte";
   import { formatScanTime } from "$lib/time";
   import type { MachineSnapshot } from "$lib/types";
@@ -18,10 +19,10 @@
       ),
     ).length;
     const problems = m.repos.filter((r) => r.state === "problem").length;
-    if (m.repos.some((r) => r.state === "error")) return { cls: "gray", label: "есть ошибки" };
-    if (unpushed > 0) return { cls: "red", label: `${unpushed} с незапушенными` };
-    if (problems > 0) return { cls: "yellow", label: `${problems} проблемных` };
-    return { cls: "green", label: `всё запушено · ${m.repos.length} репо` };
+    if (m.repos.some((r) => r.state === "error")) return { cls: "gray", label: t("m_state_error") };
+    if (unpushed > 0) return { cls: "red", label: t("m_state_unpushed", { n: unpushed }) };
+    if (problems > 0) return { cls: "yellow", label: t("m_state_problems", { n: problems }) };
+    return { cls: "green", label: t("m_state_ok", { n: m.repos.length }) };
   }
 
   function ageHours(m: MachineSnapshot): number {
@@ -31,13 +32,9 @@
 
 <div class="machines">
   {#if !store.boot?.config.sync_dir}
-    <div class="empty">
-      Сводка по машинам отключена — укажите папку синхронизации
-      (Syncthing / iCloud / приватный git-репозиторий) в настройках.
-      Каждый скан кладёт туда snapshot этой машины, pushwatch читает все.
-    </div>
+    <div class="empty">{t("m_empty_nosync")}</div>
   {:else if store.machines.length === 0}
-    <div class="empty">Пока ни одного снапшота в папке синхронизации…</div>
+    <div class="empty">{t("m_empty_none")}</div>
   {:else}
     {#each store.machines as m (m.machine_id)}
       {@const st = machineState(m)}
@@ -54,10 +51,10 @@
           <span class="dot {st.cls}"></span>
           <span class="m-name">{m.machine_name}</span>
           {#if m.machine_id === store.boot?.machine_id}
-            <span class="own-tag">эта машина</span>
+            <span class="own-tag">{t("m_own")}</span>
           {/if}
           {#if stale}
-            <span class="stale-tag" title="Снапшот старше 2 суток">устарел</span>
+            <span class="stale-tag" title={t("m_stale_title")}>{t("m_stale")}</span>
           {/if}
           <span class="m-state">{st.label}</span>
           <span class="spacer"></span>
@@ -78,7 +75,7 @@
                 </span>
               </div>
             {:else}
-              <div class="r-empty">нет репозиториев</div>
+              <div class="r-empty">{t("m_no_repos")}</div>
             {/each}
           </div>
         {/if}

@@ -1,10 +1,11 @@
 <script lang="ts">
   import { open } from "@tauri-apps/plugin-dialog";
+  import { t } from "$lib/i18n.svelte";
   import { saveConfig, setAutostart } from "$lib/api";
   import { store } from "$lib/store.svelte";
-  import type { Config, ThemePref } from "$lib/types";
+  import type { Config, LangPref, ThemePref } from "$lib/types";
 
-  // Draft copy: edits are local until "Сохранить" persists + rescans.
+  // Draft copy: edits are local until "Save" persists + rescans.
   const draft = $state<Config>(
     JSON.parse(JSON.stringify(store.config())) as Config,
   );
@@ -12,10 +13,15 @@
   let autostartEnabled = $state(store.boot?.autostart ?? false);
   let newExclude = $state("");
 
-  const themeOptions: Array<[ThemePref, string]> = [
-    ["auto", "Авто (как в системе)"],
-    ["light", "Светлая"],
-    ["dark", "Тёмная"],
+  const themeOptions: Array<[ThemePref, () => string]> = [
+    ["auto", () => t("theme_auto")],
+    ["light", () => t("theme_light")],
+    ["dark", () => t("theme_dark")],
+  ];
+  const langOptions: Array<[LangPref, () => string]> = [
+    ["auto", () => t("lang_auto")],
+    ["ru", () => t("lang_ru")],
+    ["en", () => t("lang_en")],
   ];
 
   async function save() {
@@ -31,7 +37,7 @@
       store.applyConfig(saved);
       await store.scan();
     } catch (e) {
-      store.notify(`Не удалось сохранить настройки: ${String(e)}`);
+      store.notify(t("err_save", { e: String(e) }));
     } finally {
       saving = false;
     }
@@ -71,135 +77,141 @@
 </script>
 
 <div class="settings">
-  <h2>Настройки</h2>
+  <h2>{t("st_title")}</h2>
 
   <section>
-    <h3>Корневые папки для поиска репозиториев</h3>
+    <h3>{t("sec_roots")}</h3>
     {#each draft.roots as root (root)}
       <div class="line">
         <span class="mono">{root}</span>
-        <button class="small" onclick={() => (draft.roots = draft.roots.filter((r) => r !== root))}>Убрать</button>
+        <button class="small" onclick={() => (draft.roots = draft.roots.filter((r) => r !== root))}>{t("btn_remove")}</button>
       </div>
     {/each}
-    <button class="small" onclick={() => void pickFolder("roots")}>+ Добавить папку…</button>
+    <button class="small" onclick={() => void pickFolder("roots")}>{t("btn_add_folder")}</button>
     {#if draft.roots.length === 0}
-      <p class="hint">Пока папок нет — сканировать нечего.</p>
+      <p class="hint">{t("hint_no_roots")}</p>
     {/if}
   </section>
 
   <section>
-    <h3>Дополнительные репозитории (вне корней)</h3>
+    <h3>{t("sec_extras")}</h3>
     {#each draft.extra_repos as extra (extra)}
       <div class="line">
         <span class="mono">{extra}</span>
-        <button class="small" onclick={() => (draft.extra_repos = draft.extra_repos.filter((r) => r !== extra))}>Убрать</button>
+        <button class="small" onclick={() => (draft.extra_repos = draft.extra_repos.filter((r) => r !== extra))}>{t("btn_remove")}</button>
       </div>
     {/each}
-    <button class="small" onclick={() => void pickFolder("extra_repos")}>+ Добавить репозиторий…</button>
+    <button class="small" onclick={() => void pickFolder("extra_repos")}>{t("btn_add_repo")}</button>
   </section>
 
   <section>
-    <h3>Исключённые папки (не спускаться внутрь)</h3>
+    <h3>{t("sec_excludes")}</h3>
     <div class="tags">
       {#each draft.exclude_dirs as ex (ex)}
         <span class="tag">
           {ex}
-          <button class="x" title="Убрать" onclick={() => (draft.exclude_dirs = draft.exclude_dirs.filter((e) => e !== ex))}>✕</button>
+          <button class="x" title={t("btn_remove")} onclick={() => (draft.exclude_dirs = draft.exclude_dirs.filter((e) => e !== ex))}>✕</button>
         </span>
       {/each}
     </div>
     <div class="line">
       <input
         type="text"
-        placeholder="имя папки, например vendor"
+        placeholder={t("excl_ph")}
         bind:value={newExclude}
         onkeydown={(e) => e.key === "Enter" && addExclude()}
       />
-      <button class="small" onclick={addExclude}>+ Добавить</button>
+      <button class="small" onclick={addExclude}>{t("btn_add")}</button>
     </div>
   </section>
 
   <section>
-    <h3>Скрытые репозитории</h3>
+    <h3>{t("sec_hidden")}</h3>
     {#if draft.hidden_repos.length === 0}
-      <p class="hint">Нет скрытых.</p>
+      <p class="hint">{t("hint_no_hidden")}</p>
     {:else}
       {#each draft.hidden_repos as hidden (hidden)}
         <div class="line">
           <span class="mono">{hidden}</span>
-          <button class="small" onclick={() => (draft.hidden_repos = draft.hidden_repos.filter((r) => r !== hidden))}>Вернуть</button>
+          <button class="small" onclick={() => (draft.hidden_repos = draft.hidden_repos.filter((r) => r !== hidden))}>{t("btn_restore")}</button>
         </div>
       {/each}
     {/if}
   </section>
 
   <section>
-    <h3>Сканирование и автоматика</h3>
+    <h3>{t("sec_scan")}</h3>
     <div class="line">
-      <label for="interval">Интервал, сек</label>
+      <label for="interval">{t("lbl_interval")}</label>
       <input id="interval" type="number" min="60" max="86400" bind:value={draft.scan_interval_secs} />
     </div>
     <div class="line">
-      <label for="depth">Глубина поиска, уровней</label>
+      <label for="depth">{t("lbl_depth")}</label>
       <input id="depth" type="number" min="1" max="32" bind:value={draft.max_depth} />
     </div>
     <div class="line">
       <label>
         <input type="checkbox" bind:checked={draft.watch_fs} />
-        Реагировать на изменения .git (мгновенный перескан после коммитов)
+        {t("lbl_watch_fs")}
       </label>
     </div>
     <div class="line">
       <label>
         <input type="checkbox" bind:checked={draft.auto_fetch} />
-        git fetch --all перед каждым фоновым сканом (сетевой трафик)
+        {t("lbl_auto_fetch")}
       </label>
     </div>
     <div class="line">
       <label>
         <input type="checkbox" bind:checked={draft.notify_on_problems} />
-        Системные уведомления при появлении незапушенных коммитов
+        {t("lbl_notify")}
       </label>
     </div>
     <div class="line">
-      <span class="lbl">Тема</span>
+      <span class="lbl">{t("lbl_theme")}</span>
       {#each themeOptions as [value, label] (value)}
         <label class="radio">
           <input type="radio" name="theme" value={value} bind:group={draft.theme} />
-          {label}
+          {label()}
+        </label>
+      {/each}
+    </div>
+    <div class="line">
+      <span class="lbl">{t("lbl_lang")}</span>
+      {#each langOptions as [value, label] (value)}
+        <label class="radio">
+          <input type="radio" name="lang" value={value} bind:group={draft.lang} />
+          {label()}
         </label>
       {/each}
     </div>
     <div class="line">
       <label>
         <input type="checkbox" bind:checked={autostartEnabled} onchange={() => void toggleAutostart()} />
-        Запускать при входе в систему
+        {t("lbl_autostart")}
       </label>
     </div>
   </section>
 
   <section>
-    <h3>Синхронизация между машинами</h3>
+    <h3>{t("sec_sync")}</h3>
     <p class="hint">
-      Папка, куда каждый скан кладёт snapshot этой машины
-      (snapshot-&lt;id&gt;.json) и откуда читаются snapshot других машин.
-      Синхронизируйте её Syncthing / iCloud / приватным git-репозиторием —
-      вкладка «Машины» покажет сводку.
+      {t("hint_sync")}
     </p>
     <div class="line">
-      <span class="mono">{draft.sync_dir ?? "— не настроено —"}</span>
+      <span class="mono">{draft.sync_dir ?? t("sync_unset")}</span>
       <span class="spacer"></span>
-      <button class="small" onclick={() => void pickSyncDir()}>Выбрать папку…</button>
+      <button class="small" onclick={() => void pickSyncDir()}>{t("btn_pick_sync")}</button>
       {#if draft.sync_dir}
-        <button class="small" onclick={() => { draft.sync_dir = null; void save(); }}>Отключить</button>
+        <button class="small" onclick={() => { draft.sync_dir = null; void save(); }}>{t("btn_sync_disable")}</button>
       {/if}
     </div>
   </section>
 
   <section>
-    <h3>Эта машина</h3>
+    <h3>{t("sec_machine")}</h3>
     <p class="hint">
-      имя: {store.boot?.machine_name} · id: <span class="mono">{store.boot?.machine_id.slice(0, 8)}…</span>
+      {t("m_name_label")}: {store.boot?.machine_name} · id: <span class="mono">{store.boot?.machine_id.slice(0, 8)}…</span>
       {#if store.boot?.git_version}
         · {store.boot.git_version}
       {/if}
@@ -208,9 +220,9 @@
 
   <div class="actions">
     <button class="primary" disabled={saving} onclick={() => void save()}>
-      {saving ? "Сохранение…" : "Сохранить и пересканировать"}
+      {saving ? t("btn_saving") : t("btn_save")}
     </button>
-    <span class="hint">Изменения корней/исключений применяются после сохранения.</span>
+    <span class="hint">{t("hint_save")}</span>
   </div>
 </div>
 
